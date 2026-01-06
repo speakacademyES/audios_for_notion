@@ -79,9 +79,8 @@
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             max-width: 500px;
-            max-height: 1000px;
             width: 100%;
-            overflow: hidden;
+            /* Removed max-height and overflow: hidden to fix Notion embed */
         }
 
         .header-image {
@@ -181,7 +180,7 @@
             font-size: 13px;
             color: #1565c0;
             line-height: 1.6;
-            margin-bottom: 20px;
+            margin-bottom: 20px; /* Added to create space between instructions and audio player */
         }
 
         .transcript-container::-webkit-scrollbar {
