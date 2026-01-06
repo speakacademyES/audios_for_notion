@@ -148,11 +148,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎙️ Story Player</h1>
+        <h1 id="pageTitle">🎙️ Story Player</h1>
         <p class="subtitle">Click text to jump to that moment in the audio</p>
 
         <audio id="audioPlayer" controls>
-            <source src="my-podcast.mp3" type="audio/mpeg">
+            <source id="audioSource" src="" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
 
@@ -170,8 +170,20 @@
 
     <script>
         const audioPlayer = document.getElementById('audioPlayer');
+        const audioSource = document.getElementById('audioSource');
         const transcriptDisplay = document.getElementById('transcriptDisplay');
+        const pageTitle = document.getElementById('pageTitle');
         let cues = [];
+
+        // Get URL parameters
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                audio: params.get('audio') || 'audio.mp3',
+                vtt: params.get('vtt') || 'Transcript.vtt',
+                title: params.get('title') || 'Audio Player'
+            };
+        }
 
         // Parse VTT timestamp to seconds
         function parseVTTTime(timestamp) {
@@ -196,7 +208,7 @@
                 transcriptDisplay.innerHTML = `
                     <div class="error">
                         ❌ Error loading transcript: ${error.message}<br>
-                        Make sure "Compare_Adjectives.vtt" is in the same folder as this HTML file.
+                        Make sure the VTT file "${url}" exists and is accessible.
                     </div>
                 `;
                 return [];
@@ -291,17 +303,44 @@
             });
         });
 
-        // Format seconds to MM:SS
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${minutes}:${String(secs).padStart(2, '0')}`;
+        // Initialize player with URL parameters
+        function initializePlayer() {
+            const params = getUrlParams();
+            
+            // Set page title
+            pageTitle.textContent = '🎙️ ' + params.title;
+            document.title = params.title + ' - Audio Player';
+            
+            // Set audio source
+            audioSource.src = params.audio;
+            audioPlayer.load(); // Important: reload the audio element
+            
+            // Load transcript
+            loadVTT(params.vtt).then(transcriptData => {
+                displayTranscript(transcriptData);
+            });
+            
+            console.log('Player initialized with:', params);
         }
 
-        // Initialize
-        loadVTT('Compare_Adjectives.vtt').then(transcriptData => {
-            displayTranscript(transcriptData);
-        });
+        // Start the player
+        initializePlayer();
     </script>
 </body>
 </html>
+```
+
+## How to Use It:
+
+### 1. **Organize your files:**
+```
+/your-repo/
+├── player.html (this file)
+├── audio/
+│   ├── comparatives.mp3
+│   ├── superlatives.mp3
+│   └── prepositions.mp3
+└── transcripts/
+    ├── comparatives.vtt
+    ├── superlatives.vtt
+    └── prepositions.vtt
