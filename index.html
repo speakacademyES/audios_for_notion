@@ -148,7 +148,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎙️ Audio Transcript Player</h1>
+        <h1>🎙️ Story Player</h1>
         <p class="subtitle">Click text to jump to that moment in the audio</p>
 
         <audio id="audioPlayer" controls>
@@ -203,34 +203,30 @@
             }
         }
 
-        // Parse VTT content
+        // Parse VTT content - handles cue identifiers
         function parseVTT(vttText) {
             const lines = vttText.split('\n');
             const cues = [];
-            let i = 0;
-
-            // Skip WEBVTT header
-            while (i < lines.length && !lines[i].includes('-->')) {
-                i++;
-            }
-
-            // Parse cues
-            while (i < lines.length) {
+            
+            for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
                 
+                // Look for timestamp lines
                 if (line.includes('-->')) {
                     const [startTime, endTime] = line.split('-->').map(t => t.trim());
                     const start = parseVTTTime(startTime);
                     const end = parseVTTTime(endTime);
                     
-                    // Collect text lines until empty line or end
+                    // Collect text lines (everything after timestamp until blank line)
                     i++;
-                    let text = '';
+                    let textLines = [];
                     while (i < lines.length && lines[i].trim() !== '') {
-                        if (text) text += ' ';
-                        text += lines[i].trim();
+                        textLines.push(lines[i].trim());
                         i++;
                     }
+                    
+                    // Join all text lines with space
+                    const text = textLines.join(' ');
                     
                     // Only add cues that have text
                     if (text) {
@@ -241,9 +237,9 @@
                         });
                     }
                 }
-                i++;
             }
 
+            console.log('Parsed cues:', cues.length);
             return cues;
         }
 
