@@ -130,6 +130,20 @@
         .transcript-container::-webkit-scrollbar-thumb:hover {
             background: #764ba2;
         }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            border-radius: 4px;
+            color: #c62828;
+        }
     </style>
 </head>
 <body>
@@ -144,7 +158,9 @@
 
         <div class="transcript-container">
             <div class="transcript-title">📝 Transcript</div>
-            <div id="transcriptDisplay"></div>
+            <div id="transcriptDisplay">
+                <div class="loading">Loading transcript...</div>
+            </div>
         </div>
 
         <div class="instructions">
@@ -157,26 +173,89 @@
         const transcriptDisplay = document.getElementById('transcriptDisplay');
         let cues = [];
 
-        // Transcript data embedded directly
-        const transcriptData = [
-            { startTime: 0.120, endTime: 5.000, text: "This is a download from BBC Learning English. To find out more, visit our website. [Music] Six Minute Grammar." },
-            { startTime: 8.400, endTime: 9.720, text: "From the BBC." },
-            { startTime: 11.060, endTime: 14.390, text: "Hello, and welcome to Six Minute Grammar with me, Rob." },
-            { startTime: 14.390, endTime: 18.259, text: "And me, Sophie. Hello. Today, we're talking about comparatives and superlatives." },
-            { startTime: 22.060, endTime: 28.000, text: "We use comparatives and superlatives to compare people and things. Listen carefully." },
-            { startTime: 31.760, endTime: 36.699, text: "We'll start with examples of the comparative. So Sophie, can you stand up please?" },
-            { startTime: 39.800, endTime: 43.140, text: "Right. Look, back to back here." },
-            { startTime: 43.140, endTime: 48.020, text: "I'm taller than you. But I'm thinner than you." },
-            { startTime: 48.020, endTime: 52.520, text: "The sentences, I'm taller than you, and I'm thinner than you, both use the comparative form." },
-            { startTime: 57.300, endTime: 61.780, text: "Listen again to the examples. Where does the word than come?" },
-            { startTime: 83.660, endTime: 88.860, text: "There are different ways to make the comparative form. For short words, add -er." },
-            { startTime: 95.360, endTime: 97.220, text: "Thin becomes thinner." },
-            { startTime: 110.380, endTime: 116.480, text: "So happy becomes happier. Easy becomes easier." },
-            { startTime: 120.920, endTime: 126.160, text: "Adjectives with two or more syllables use more." },
-            { startTime: 133.100, endTime: 139.360, text: "A tablet is more useful than a laptop. The film is more exciting than the book." }
-        ];
+        // Parse VTT timestamp to seconds
+        function parseVTTTime(timestamp) {
+            const parts = timestamp.split(':');
+            const hours = parseInt(parts[0]);
+            const minutes = parseInt(parts[1]);
+            const seconds = parseFloat(parts[2]);
+            return hours * 3600 + minutes * 60 + seconds;
+        }
 
-        function displayTranscript() {
+        // Load and parse VTT file
+        async function loadVTT(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Failed to load VTT file: ${response.status}`);
+                }
+                const text = await response.text();
+                return parseVTT(text);
+            } catch (error) {
+                console.error('Error loading VTT:', error);
+                transcriptDisplay.innerHTML = `
+                    <div class="error">
+                        ❌ Error loading transcript: ${error.message}<br>
+                        Make sure "Compare_Adjectives.vtt" is in the same folder as this HTML file.
+                    </div>
+                `;
+                return [];
+            }
+        }
+
+        // Parse VTT content
+        function parseVTT(vttText) {
+            const lines = vttText.split('\n');
+            const cues = [];
+            let i = 0;
+
+            // Skip WEBVTT header
+            while (i < lines.length && !lines[i].includes('-->')) {
+                i++;
+            }
+
+            // Parse cues
+            while (i < lines.length) {
+                const line = lines[i].trim();
+                
+                if (line.includes('-->')) {
+                    const [startTime, endTime] = line.split('-->').map(t => t.trim());
+                    const start = parseVTTTime(startTime);
+                    const end = parseVTTTime(endTime);
+                    
+                    // Collect text lines until empty line or end
+                    i++;
+                    let text = '';
+                    while (i < lines.length && lines[i].trim() !== '') {
+                        if (text) text += ' ';
+                        text += lines[i].trim();
+                        i++;
+                    }
+                    
+                    // Only add cues that have text
+                    if (text) {
+                        cues.push({
+                            startTime: start,
+                            endTime: end,
+                            text: text
+                        });
+                    }
+                }
+                i++;
+            }
+
+            return cues;
+        }
+
+        // Display transcript
+        function displayTranscript(transcriptData) {
+            transcriptDisplay.innerHTML = '';
+            
+            if (transcriptData.length === 0) {
+                transcriptDisplay.innerHTML = '<div class="error">No transcript data found.</div>';
+                return;
+            }
+
             transcriptData.forEach((cue, index) => {
                 const cueDiv = document.createElement('div');
                 cueDiv.className = 'cue';
@@ -195,10 +274,13 @@
                 });
 
                 transcriptDisplay.appendChild(cueDiv);
-                cues.push(cue);
             });
+
+            cues = transcriptData;
+            console.log(`✅ Loaded ${cues.length} transcript cues`);
         }
 
+        // Highlight active cue during playback
         audioPlayer.addEventListener('timeupdate', () => {
             const currentTime = audioPlayer.currentTime;
 
@@ -217,13 +299,17 @@
             });
         });
 
+        // Format seconds to MM:SS
         function formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${minutes}:${String(secs).padStart(2, '0')}`;
         }
 
-        displayTranscript();
+        // Initialize
+        loadVTT('Compare_Adjectives.vtt').then(transcriptData => {
+            displayTranscript(transcriptData);
+        });
     </script>
 </body>
 </html>
