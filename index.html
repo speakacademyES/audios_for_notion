@@ -1,4 +1,57 @@
 <!DOCTYPE html>
+<!--
+═══════════════════════════════════════════════════════════════════════════════
+  AUDIO PLAYER WITH SYNCHRONIZED TRANSCRIPTS
+═══════════════════════════════════════════════════════════════════════════════
+
+  HOW TO USE THIS PLAYER FOR MULTIPLE LESSONS:
+  
+  This single HTML file can be used for unlimited audio/transcript pairs by 
+  passing URL parameters. You don't need to duplicate this file!
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ FILE STRUCTURE                                                          │
+  └─────────────────────────────────────────────────────────────────────────┘
+  
+  /your-project/
+  ├── index.html (this file)
+  ├── audio/
+  │   ├── lesson1.mp3
+  │   ├── lesson2.mp3
+  │   └── lesson3.mp3
+  ├── transcripts/
+  │   ├── lesson1.vtt
+  │   ├── lesson2.vtt
+  │   └── lesson3.vtt
+  └── images/
+      ├── lesson1.jpg
+      ├── lesson2.jpg
+      └── lesson3.jpg
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ URL PARAMETERS                                                          │
+  └─────────────────────────────────────────────────────────────────────────┘
+  
+  - audio  = Path to your MP3 file (e.g., audio/lesson1.mp3)
+  - vtt    = Path to your VTT transcript (e.g., transcripts/lesson1.vtt)
+  - title  = Title shown on the page (e.g., My Lesson Title)
+  - image  = Path to header image (e.g., images/lesson1.jpg) - OPTIONAL
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ EXAMPLE URL                                                             │
+  └─────────────────────────────────────────────────────────────────────────┘
+  
+  https://yoursite.com/?audio=audio/lesson1.mp3&vtt=transcripts/lesson1.vtt&title=Comparatives&image=images/lesson1.jpg
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ RECOMMENDED IMAGE SIZE                                                  │
+  └─────────────────────────────────────────────────────────────────────────┘
+  
+  1200x675px 16:9 ratio) - JPG or PNG format
+  This size looks great on all devices and loads quickly.
+
+═══════════════════════════════════════════════════════════════════════════════
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -25,9 +78,25 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
             max-width: 700px;
             width: 100%;
+            overflow: hidden;
+        }
+
+        .header-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            max-height: 400px;
+        }
+
+        .header-image.hidden {
+            display: none;
+        }
+
+        .content {
+            padding: 40px;
         }
 
         h1 {
@@ -148,23 +217,27 @@
 </head>
 <body>
     <div class="container">
-        <h1 id="pageTitle">🎙️ Story Player</h1>
-        <p class="subtitle">Click text to jump to that moment in the audio</p>
+        <img id="headerImage" class="header-image hidden" alt="Lesson header image">
+        
+        <div class="content">
+            <h1 id="pageTitle">🎙️ Story Player</h1>
+            <p class="subtitle">Click text to jump to that moment in the audio</p>
 
-        <audio id="audioPlayer" controls>
-            <source id="audioSource" src="" type="audio/mpeg">
-            Your browser does not support the audio element.
-        </audio>
+            <audio id="audioPlayer" controls>
+                <source id="audioSource" src="" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
 
-        <div class="transcript-container">
-            <div class="transcript-title">📝 Transcript</div>
-            <div id="transcriptDisplay">
-                <div class="loading">Loading transcript...</div>
+            <div class="transcript-container">
+                <div class="transcript-title">📝 Transcript</div>
+                <div id="transcriptDisplay">
+                    <div class="loading">Loading transcript...</div>
+                </div>
             </div>
-        </div>
 
-        <div class="instructions">
-            ℹ️ <strong>How to use:</strong> Play the audio and watch the text highlight in sync. Click any text segment to jump to that moment in the audio.
+            <div class="instructions">
+                ℹ️ <strong>How to use:</strong> Play the audio and watch the text highlight in sync. Click any text segment to jump to that moment in the audio.
+            </div>
         </div>
     </div>
 
@@ -173,6 +246,7 @@
         const audioSource = document.getElementById('audioSource');
         const transcriptDisplay = document.getElementById('transcriptDisplay');
         const pageTitle = document.getElementById('pageTitle');
+        const headerImage = document.getElementById('headerImage');
         let cues = [];
 
         // Get URL parameters
@@ -180,8 +254,9 @@
             const params = new URLSearchParams(window.location.search);
             return {
                 audio: params.get('audio') || 'audio.mp3',
-                vtt: params.get('vtt') || 'Transcript.vtt',
-                title: params.get('title') || 'Audio Player'
+                vtt: params.get('vtt') || 'transcript.vtt',
+                title: params.get('title') || 'Audio Player',
+                image: params.get('image') || null
             };
         }
 
@@ -311,9 +386,18 @@
             pageTitle.textContent = '🎙️ ' + params.title;
             document.title = params.title + ' - Audio Player';
             
+            // Set header image if provided
+            if (params.image) {
+                headerImage.src = params.image;
+                headerImage.alt = params.title;
+                headerImage.classList.remove('hidden');
+            } else {
+                headerImage.classList.add('hidden');
+            }
+            
             // Set audio source
             audioSource.src = params.audio;
-            audioPlayer.load(); // Important: reload the audio element
+            audioPlayer.load();
             
             // Load transcript
             loadVTT(params.vtt).then(transcriptData => {
