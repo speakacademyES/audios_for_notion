@@ -139,7 +139,6 @@
 
         <audio id="audioPlayer" controls>
             <source src="my-podcast.mp3" type="audio/mpeg">
-            <track kind="captions" src="my-podcast.vtt" srclang="en" label="English">
             Your browser does not support the audio element.
         </audio>
 
@@ -149,7 +148,7 @@
         </div>
 
         <div class="instructions">
-            ℹ️ <strong>How to use:</strong> Play the audio and watch the text highlight in sync. Click any text segment to jump to that moment in the audio. Adjust playback speed with your browser's audio controls.
+            ℹ️ <strong>How to use:</strong> Play the audio and watch the text highlight in sync. Click any text segment to jump to that moment in the audio.
         </div>
     </div>
 
@@ -158,36 +157,30 @@
         const transcriptDisplay = document.getElementById('transcriptDisplay');
         let cues = [];
 
-        function loadTranscript() {
-            const track = audioPlayer.querySelector('track');
-            
-            if (!track) {
-                console.error('No track element found');
-                return;
-            }
-
-            track.addEventListener('load', function() {
-                const trackElement = this;
-                const cueList = trackElement.track.cues;
-
-                for (let i = 0; i < cueList.length; i++) {
-                    cues.push({
-                        startTime: cueList[i].startTime,
-                        endTime: cueList[i].endTime,
-                        text: cueList[i].text,
-                        id: i
-                    });
-                }
-
-                displayTranscript();
-            });
-        }
+        // Transcript data embedded directly
+        const transcriptData = [
+            { startTime: 0.120, endTime: 5.000, text: "This is a download from BBC Learning English. To find out more, visit our website. [Music] Six Minute Grammar." },
+            { startTime: 8.400, endTime: 9.720, text: "From the BBC." },
+            { startTime: 11.060, endTime: 14.390, text: "Hello, and welcome to Six Minute Grammar with me, Rob." },
+            { startTime: 14.390, endTime: 18.259, text: "And me, Sophie. Hello. Today, we're talking about comparatives and superlatives." },
+            { startTime: 22.060, endTime: 28.000, text: "We use comparatives and superlatives to compare people and things. Listen carefully." },
+            { startTime: 31.760, endTime: 36.699, text: "We'll start with examples of the comparative. So Sophie, can you stand up please?" },
+            { startTime: 39.800, endTime: 43.140, text: "Right. Look, back to back here." },
+            { startTime: 43.140, endTime: 48.020, text: "I'm taller than you. But I'm thinner than you." },
+            { startTime: 48.020, endTime: 52.520, text: "The sentences, I'm taller than you, and I'm thinner than you, both use the comparative form." },
+            { startTime: 57.300, endTime: 61.780, text: "Listen again to the examples. Where does the word than come?" },
+            { startTime: 83.660, endTime: 88.860, text: "There are different ways to make the comparative form. For short words, add -er." },
+            { startTime: 95.360, endTime: 97.220, text: "Thin becomes thinner." },
+            { startTime: 110.380, endTime: 116.480, text: "So happy becomes happier. Easy becomes easier." },
+            { startTime: 120.920, endTime: 126.160, text: "Adjectives with two or more syllables use more." },
+            { startTime: 133.100, endTime: 139.360, text: "A tablet is more useful than a laptop. The film is more exciting than the book." }
+        ];
 
         function displayTranscript() {
-            cues.forEach(cue => {
+            transcriptData.forEach((cue, index) => {
                 const cueDiv = document.createElement('div');
                 cueDiv.className = 'cue';
-                cueDiv.id = `cue-${cue.id}`;
+                cueDiv.id = `cue-${index}`;
                 
                 const startTimeFormatted = formatTime(cue.startTime);
                 
@@ -202,6 +195,7 @@
                 });
 
                 transcriptDisplay.appendChild(cueDiv);
+                cues.push(cue);
             });
         }
 
@@ -212,34 +206,24 @@
                 cue.classList.remove('active');
             });
 
-            cues.forEach(cue => {
+            cues.forEach((cue, index) => {
                 if (currentTime >= cue.startTime && currentTime < cue.endTime) {
-                    const cueElement = document.getElementById(`cue-${cue.id}`);
+                    const cueElement = document.getElementById(`cue-${index}`);
                     if (cueElement) {
                         cueElement.classList.add('active');
-                        
-                        cueElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'nearest'
-                        });
+                        cueElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                 }
             });
         });
 
         function formatTime(seconds) {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
+            const minutes = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
-
-            if (hours > 0) {
-                return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            } else {
-                return `${minutes}:${String(secs).padStart(2, '0')}`;
-            }
+            return `${minutes}:${String(secs).padStart(2, '0')}`;
         }
 
-        loadTranscript();
+        displayTranscript();
     </script>
 </body>
 </html>
