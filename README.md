@@ -32,7 +32,7 @@ One player file (`index.html`) + URL parameters = unlimited audio lessons.
 https://yourusername.github.io/repo-name/?audio=audio/lesson-name.mp3&vtt=transcripts/lesson-name.vtt&title=Lesson Title
 ```
 
-## 💡 URL Format
+## 💡 URL Format (THIS IS WHAT YOU EMBED IN NOTION - WITH THE CORRECT CHANGES APPLIED POINTING TO YOUR FILES + TITLE)
 ```
 https://yourusername.github.io/repo-name/?audio=audio/FILENAME.mp3&vtt=transcripts/FILENAME.vtt&title=YOUR_TITLE
 ```
