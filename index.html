@@ -225,8 +225,8 @@
                         i++;
                     }
                     
-                    // Join all text lines with space
-                    const text = textLines.join(' ');
+                    // Join all text lines with <br> to preserve line breaks
+                    const text = textLines.join('<br>');
                     
                     // Only add cues that have text
                     if (text) {
