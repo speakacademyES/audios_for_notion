@@ -257,12 +257,8 @@
                 cueDiv.className = 'cue';
                 cueDiv.id = `cue-${index}`;
                 
-                const startTimeFormatted = formatTime(cue.startTime);
-                
-                cueDiv.innerHTML = `
-                    <div class="timestamp">${startTimeFormatted}</div>
-                    <div>${cue.text}</div>
-                `;
+                // Just the text, no timestamp
+                cueDiv.innerHTML = `<div>${cue.text}</div>`;
 
                 cueDiv.addEventListener('click', () => {
                     audioPlayer.currentTime = cue.startTime;
